@@ -1,0 +1,15 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="MonoDevelop.Default" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TagScan.cs">
+    <Files>
+      <File FileName="Assets\TagScan.cs" Line="217" Column="9" />
+      <File FileName="Assets\TagScan.cs" Line="217" Column="9" />
+      <File FileName="Assets\DataStat.cs" Line="1" Column="1" />
+      <File FileName="Assets\PieInteractionScript.cs" Line="1" Column="1" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>

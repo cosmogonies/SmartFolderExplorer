@@ -9,72 +9,7 @@ using System.IO;
 using UnityEditor;
 using System.Reflection;
 
-/*
-public class TaggedItem
-{
-
-}
-*/
-
-public class TaggedFile
-{
-	public long Size = 0; //in Bytes
-
-	public string Extension = ""; //with .  (as in .png, .mov)
-
-	string FileName="";
-	public string FilePath="";
-
-	public TaggedFolder Folder;
-
-	//int Depth;
-
-	public TaggedFile(string _FullPath, string _Extension, long _Size, TaggedFolder _Parent)
-	{
-		this.FilePath = _FullPath;
-		this.Extension = _Extension;
-		this.Size = _Size;
-		this.Folder = _Parent;
-	}
-}
-
-public class TaggedFolder
-{
-	public int Depth;
-	public long LocalSize = 0; //in Bytes , sum of all direct files.
-	public long TotalSize = 0; //in Bytes , sum of all inherited files.
-
-	public string FolderName="";
-	public string FolderPath="";
-
-	public List<TaggedFile> Files;
-
-	public List<TaggedFolder> Folders;	//Containing folders.
-
-	public TaggedFolder(string _FullPath)
-	{
-		string[] tokenized = _FullPath.Split( '\\');
-
-		this.FolderName = tokenized[tokenized.Length-1];
-		this.FolderPath = _FullPath;
-
-		this.Depth = tokenized.Length;
-
-		this.Files = new List<TaggedFile>();
-		this.Folders = new List<TaggedFolder>();
-	}
-
-	public void calcSize()
-	{
-		foreach( TaggedFile cur in Files 	)
-		{
-			this.LocalSize+= cur.Size;
-		}
-
-	}
-
-}
-
+using SmartFolder;
 
 public class TagScan : MonoBehaviour
 {
@@ -94,8 +29,9 @@ public class TagScan : MonoBehaviour
 	public int MaxDepth=0;
 	Dictionary<int, List<TaggedFolder> > DepthDict;
 	public TaggedFolder CurrentFolder;
+	public TaggedFolder CurrentScannedFolder;
 
-	public string rootFolder = @"D:\I_DRIVE\cPaulhiac\MAYA";
+	public string rootFolder;
 	public float progression =0.0f;
 	int MAXFOLDER=0;
 	private int currentFolderCount=0;
@@ -105,7 +41,10 @@ public class TagScan : MonoBehaviour
 	{
 		DepthDict = new Dictionary<int, List<TaggedFolder>>();
 	}
-
+	void Update()
+	{
+		//StartCoroutine( scanFolderRecursively(rootFolder, CurrentFolder) );
+	}
 	
 	public void scanFolder()
 	//public IEnumerator scanFolder()
@@ -119,19 +58,29 @@ public class TagScan : MonoBehaviour
 		//string rootFolder = @"D:\I_DRIVE\cPaulhiac";
 		//string rootFolder = @"W:\PJPMMP";
 	
-		this.MAXFOLDER = System.IO.Directory.GetDirectories(rootFolder, "*", System.IO.SearchOption.AllDirectories).Length;
 
 		Stopwatch currentWatch2 = System.Diagnostics.Stopwatch.StartNew();
-		string searchPattern = "*";
-		string[] files = System.IO.Directory.GetFiles(rootFolder, searchPattern, System.IO.SearchOption.AllDirectories);
+		this.MAXFOLDER = System.IO.Directory.GetDirectories(rootFolder, "*", System.IO.SearchOption.AllDirectories).Length;
 		currentWatch2.Stop();
-		UnityEngine.Debug.Log ("Found "+files.Length+" #files in "+(currentWatch2.ElapsedMilliseconds/1000.0f)+" seconds.");
+		UnityEngine.Debug.Log ("Found "+this.MAXFOLDER+" #MAXFOLDER in "+(currentWatch2.ElapsedMilliseconds/1000.0f)+" seconds.");
+
+		//Stopwatch currentWatch2 = System.Diagnostics.Stopwatch.StartNew();
+		//string searchPattern = "*";
+		//string[] files = System.IO.Directory.GetFiles(rootFolder, searchPattern, System.IO.SearchOption.AllDirectories);
+		//currentWatch2.Stop();
+		//UnityEngine.Debug.Log ("Found "+files.Length+" #files in "+(currentWatch2.ElapsedMilliseconds/1000.0f)+" seconds.");
 
 
 
 		Stopwatch currentWatch = System.Diagnostics.Stopwatch.StartNew();
 
-		this.CurrentFolder = scanFolderRecursively(rootFolder);
+		//this.CurrentFolder = scanFolderRecursively(rootFolder);
+
+		TaggedFolder currentFolder =new TaggedFolder(rootFolder);
+		this.Data.Add ( currentFolder );
+		//_ParentFolder.Folders.Add(currentFolder);
+		//scanFolderRecursively(rootFolder, currentFolder);
+		StartCoroutine( scanFolderRecursively(rootFolder, currentFolder) );
 
 		currentWatch.Stop();
 		long elapsedMs = currentWatch.ElapsedMilliseconds;
@@ -162,35 +111,7 @@ public class TagScan : MonoBehaviour
 		}
 
 
-		refresh( this.CurrentFolder );
-
-		/*
-		List<long,string> SortedReverseResult = new List<long,string>();
-		foreach( KeyValuePair<string, long> kvp in this.Statistic_Extension ){}
-		*/
-
-/*
-		List<KeyValuePair<string, long>> myList = this.Statistic_Extension.ToList();
-		myList.Sort((firstPair,nextPair) =>
-			{
-        		return firstPair.Value.CompareTo(nextPair.Value);
-    		}
-    	);
-*/
-
-
-		//foreach( KeyValuePair<string, long> kvp in this.Statistic_Extension )
-		//foreach( KeyValuePair<string, long> kvp in myList )
-		//{
-		//	UnityEngine.Debug.Log (		kvp.Key+" = "+kvp.Value );
-		//}
-
-		/*
-		foreach( KeyValuePair<string, long> kvp in this.Statistic_Extension )
-		{
-			UnityEngine.Debug.Log (		kvp.Key+" = "+kvp.Value );
-		}
-		*/
+		updateFolderCharts( this.CurrentFolder );
 
 	}
 
@@ -214,7 +135,7 @@ public class TagScan : MonoBehaviour
 	}
 
 
-	public void refresh(TaggedFolder _RootFolder)
+	public void updateFolderCharts(TaggedFolder _RootFolder)
 	{
 		this.CurrentFolder = _RootFolder;
 
@@ -247,62 +168,67 @@ public class TagScan : MonoBehaviour
 
 	}
 
-	TaggedFolder scanFolderRecursively( string _Path )
+	IEnumerator scanFolderRecursively( string _Path, TaggedFolder _ParentFolder )
+	//TaggedFolder scanFolderRecursively( string _Path )
+	//void scanFolderRecursively( string _Path, TaggedFolder _ParentFolder )
 	{
-		TaggedFolder currentFolder = new TaggedFolder(_Path);
-		this.Data.Add ( currentFolder );
+		UnityEngine.Debug.Log ("scanFolderRecursively");
 
-		if( currentFolder.Depth > this.MaxDepth )
-			this.MaxDepth = currentFolder.Depth;
+		if( _ParentFolder.Depth > this.MaxDepth )
+			this.MaxDepth = _ParentFolder.Depth;
 
-		if(! this.DepthDict.ContainsKey( currentFolder.Depth ) )
-			this.DepthDict[ currentFolder.Depth ] = new List<TaggedFolder>();
+		if(! this.DepthDict.ContainsKey( _ParentFolder.Depth ) )
+			this.DepthDict[ _ParentFolder.Depth ] = new List<TaggedFolder>();
 
-		this.DepthDict[ currentFolder.Depth ].Add( currentFolder );
-
-
-		//string searchPattern = "*";
+		this.DepthDict[ _ParentFolder.Depth ].Add( _ParentFolder );
 
 		string[] files = new string[]{};
 		try
 		{
 			files = System.IO.Directory.GetFiles(_Path); 
-
 		}
 		catch (System.Exception e)
 		{
 		    UnityEngine.Debug.LogWarning("Exception caught ="+e.Message );
-		    //return;
+			//return;
 		}
-		//Fail on
-		//DirectoryNotFoundException: 
-		//Directory 'W:\PJPMMP\50_Departments\00_Prod\90_Envoi_Externes\To_PRANA\2013-02-05_AssetBreakdown_XML_Scripts-Olivier_S004-Prelight_S005-Prelight_S010-Prelight\orenouard-alkymia-c637e9bb314f\Mel\Installation - PuppetMaster 1.1 for Maya\PuppetMaster\RESOURCES\clips\xsiWoman_walkcycle' not found.
+		//Fail on DirectoryNotFoundException: 
 
 		foreach (string currentFilePath in files)
 		{
 			FileInfo newFile = new FileInfo(currentFilePath);
-			//long s1 = f.Length;
 
 			//this.Data.Add( newFile ) ;
-
 			if(!Statistic_Extension.ContainsKey(newFile.Extension))
 				Statistic_Extension[ newFile.Extension ] = 0;
-			//Statistic_Extension[ newFile.Extension ] ++;
 			Statistic_Extension[ newFile.Extension ] += newFile.Length ;
 
-			TaggedFile currentFile = new TaggedFile(currentFilePath, newFile.Extension, newFile.Length, currentFolder);
-			currentFolder.Files.Add(currentFile);
+			TaggedFile currentFile = new TaggedFile(currentFilePath, newFile.Extension, newFile.Length, _ParentFolder);
+			_ParentFolder.Files.Add(currentFile);
 			this.DataFiles.Add(currentFile);
 
 		}
 
+		UnityEngine.Debug.Log(_Path);
 		string[] folders = System.IO.Directory.GetDirectories(_Path); 
 		foreach (string currentDirPath in folders)
 		{
+			UnityEngine.Debug.Log(currentDirPath);
 			this.currentFolderCount ++;
-			currentFolder.Folders.Add( scanFolderRecursively(currentDirPath) );
+
+			TaggedFolder newFolder = new TaggedFolder(currentDirPath);
+			this.Data.Add ( newFolder );
+			_ParentFolder.Folders.Add(newFolder);
+
+			//currentFolder.Folders.Add( scanFolderRecursively(currentDirPath) );
+			scanFolderRecursively(currentDirPath, newFolder);
+			//CurrentScannedFolder.Folders.Add( scanFolderRecursively(currentDirPath) );
+
+			yield return null;
 		}
-		return currentFolder;
+
+		//yield return null;
+		//return currentFolder;
 	}
 
 
@@ -312,7 +238,7 @@ public class TagScan : MonoBehaviour
 
 
 	#region Chart3D
-
+	//Maybe this Region has a place in GUI3D repository...
 	void createStackBar()
 	{
 		int i=0;

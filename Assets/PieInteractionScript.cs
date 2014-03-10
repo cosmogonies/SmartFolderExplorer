@@ -5,7 +5,7 @@ public class PieInteractionScript : MonoBehaviour
 {
 	public string toolTipText;
 
-	public TaggedFolder Folder;
+	public SmartFolder.TaggedFolder Folder;
 
 	string currentToolTipText;
 	GUIStyle guiStyleFore;
@@ -62,7 +62,7 @@ public class PieInteractionScript : MonoBehaviour
 
 
 			TagScan comp = Camera.main.GetComponent<TagScan>() as TagScan;
-			comp.refresh(this.Folder);
+			comp.updateFolderCharts(this.Folder);
 		}
 		
 	}

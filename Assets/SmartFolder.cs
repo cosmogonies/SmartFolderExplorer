@@ -47,6 +47,8 @@ public class TaggedItem
 		public List<TaggedFile> Files;
 		
 		public List<TaggedFolder> Folders;	//Containing folders.
+
+		public TaggedFolder Parent;	//the parent .
 		
 		public TaggedFolder(string _FullPath)
 		{

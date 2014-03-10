@@ -13,14 +13,12 @@ using SmartFolder;
 
 public class TagScan : MonoBehaviour
 {
-
 	//Dictionary<string, List<TaggedFile> > CloudData = new Dictionary<string, List<TaggedFile>> ();
 	//Dictionary<string, List<System.IO.FileInfo> > CloudData = new Dictionary<string, List<TaggedFile>> ();
 
 	//List<System.IO.FileInfo> Data = new List<System.IO.FileInfo> ();
 
 	Dictionary<string, long> Statistic_Extension = new Dictionary<string, long> ();	
-
 	
 	List<TaggedFolder> Data = new List<TaggedFolder> ();
 	List<TaggedFile> DataFiles = new List<TaggedFile> ();
@@ -29,44 +27,50 @@ public class TagScan : MonoBehaviour
 	public int MaxDepth=0;
 	Dictionary<int, List<TaggedFolder> > DepthDict;
 	public TaggedFolder CurrentFolder;
-	public TaggedFolder CurrentScannedFolder;
+	//public TaggedFolder CurrentScannedFolder;
 
-	public string rootFolder;
+	public string rootFolderPath;
 	public float progression =0.0f;
 	int MAXFOLDER=0;
 	private int currentFolderCount=0;
-
-	// Use this for initialization
+	private string[] FOLDERS;
+	Dictionary<string, TaggedFolder> FolderDict ;
+	
 	void Start ()
 	{
 		DepthDict = new Dictionary<int, List<TaggedFolder>>();
+		FolderDict = new Dictionary<string, TaggedFolder>();
 	}
 	void Update()
 	{
-		//StartCoroutine( scanFolderRecursively(rootFolder, CurrentFolder) );
+		//StartCoroutine( scanFolderRecursively(rootFolderPath, CurrentFolder) );
+
+		//UnityEngine.Debug.Log ("Found "+this.Data.Count+" #files");
 	}
 	
 	public void scanFolder()
 	//public IEnumerator scanFolder()
 	{
 
-		//rootFolder = @"D:\I_DRIVE\cPaulhiac\MAYA";
-		string[] tokenized = rootFolder.Split( '\\');
+		//rootFolderPath = @"D:\I_DRIVE\cPaulhiac\MAYA";
+		string[] tokenized = rootFolderPath.Split( '\\');
 		this.MinDepth = tokenized.Length;
 		UnityEngine.Debug.Log ("Start depth found are "+this.MinDepth);
 
-		//string rootFolder = @"D:\I_DRIVE\cPaulhiac";
-		//string rootFolder = @"W:\PJPMMP";
+		//string rootFolderPath = @"D:\I_DRIVE\cPaulhiac";
+		//string rootFolderPath = @"W:\PJPMMP";
 	
 
 		Stopwatch currentWatch2 = System.Diagnostics.Stopwatch.StartNew();
-		this.MAXFOLDER = System.IO.Directory.GetDirectories(rootFolder, "*", System.IO.SearchOption.AllDirectories).Length;
+		this.FOLDERS = System.IO.Directory.GetDirectories(rootFolderPath, "*", System.IO.SearchOption.AllDirectories);
+		this.MAXFOLDER = this.FOLDERS.Length; 
+		//this.MAXFOLDER = System.IO.Directory.GetDirectories(rootFolderPath, "*", System.IO.SearchOption.AllDirectories).Length;
 		currentWatch2.Stop();
 		UnityEngine.Debug.Log ("Found "+this.MAXFOLDER+" #MAXFOLDER in "+(currentWatch2.ElapsedMilliseconds/1000.0f)+" seconds.");
 
 		//Stopwatch currentWatch2 = System.Diagnostics.Stopwatch.StartNew();
 		//string searchPattern = "*";
-		//string[] files = System.IO.Directory.GetFiles(rootFolder, searchPattern, System.IO.SearchOption.AllDirectories);
+		//string[] files = System.IO.Directory.GetFiles(rootFolderPath, searchPattern, System.IO.SearchOption.AllDirectories);
 		//currentWatch2.Stop();
 		//UnityEngine.Debug.Log ("Found "+files.Length+" #files in "+(currentWatch2.ElapsedMilliseconds/1000.0f)+" seconds.");
 
@@ -74,13 +78,28 @@ public class TagScan : MonoBehaviour
 
 		Stopwatch currentWatch = System.Diagnostics.Stopwatch.StartNew();
 
-		//this.CurrentFolder = scanFolderRecursively(rootFolder);
+		//this.CurrentFolder = scanFolderRecursively(rootFolderPath);
+		//scanFolderRecursively(rootFolderPath);
 
-		TaggedFolder currentFolder =new TaggedFolder(rootFolder);
+		TaggedFolder currentFolder =new TaggedFolder(rootFolderPath);
 		this.Data.Add ( currentFolder );
+		FolderDict[rootFolderPath] = currentFolder;
+		this.CurrentFolder = currentFolder;
+
+		if( currentFolder.Depth > this.MaxDepth )
+			this.MaxDepth = currentFolder.Depth;
+		if(! this.DepthDict.ContainsKey( currentFolder.Depth ) )
+			this.DepthDict[ currentFolder.Depth ] = new List<TaggedFolder>();
+		this.DepthDict[ currentFolder.Depth ].Add( currentFolder );
+
+
+
 		//_ParentFolder.Folders.Add(currentFolder);
-		//scanFolderRecursively(rootFolder, currentFolder);
-		StartCoroutine( scanFolderRecursively(rootFolder, currentFolder) );
+		//scanFolderRecursively(rootFolderPath, currentFolder);
+		//StartCoroutine( scanFolderRecursively(rootFolderPath, currentFolder) );
+
+		StartCoroutine( scanFolderIteratively() );
+		//scanFolderIteratively();
 
 		currentWatch.Stop();
 		long elapsedMs = currentWatch.ElapsedMilliseconds;
@@ -89,21 +108,30 @@ public class TagScan : MonoBehaviour
 		UnityEngine.Debug.Log ("Max depth found are "+this.MaxDepth);
 		UnityEngine.Debug.Log ("--------------------------------------------");
 
-		//Lets analyse Scanned:
 
+
+		//updateFolderCharts( this.CurrentFolder );
+
+	}
+
+	void analyseScanned()
+	{
+
+		//Lets analyse Scanned:
+		
 		//Update each folder local sizes.
 		foreach(TaggedFile currentFile in this.DataFiles)
 		{
 			currentFile.Folder.LocalSize += currentFile.Size;
 		}
-
+		
 		for(int i=this.MaxDepth; i>=this.MinDepth ; i--)
 		{
 			foreach(TaggedFolder currentTopFolder in  this.DepthDict[i])
 			{
 				// My size is 1)my files:
 				currentTopFolder.TotalSize = currentTopFolder.LocalSize;
-
+				
 				// 2) + all my children folder sizes.
 				foreach(TaggedFolder currentChildFolder in currentTopFolder.Folders )
 					currentTopFolder.TotalSize += currentChildFolder.TotalSize;
@@ -111,15 +139,13 @@ public class TagScan : MonoBehaviour
 		}
 
 
-		updateFolderCharts( this.CurrentFolder );
-
 	}
 
 
 	public void OnGUI()
 	{
 
-		this.rootFolder = GUI.TextField( new Rect(0f,0f,Screen.width, 32f), this.rootFolder );
+		this.rootFolderPath = GUI.TextField( new Rect(0f,0f,Screen.width, 32f), this.rootFolderPath );
 
 
 		if ( GUI.Button( new Rect(0f,32f,Screen.width, 32f), "-* SCAN *-" ) )
@@ -129,9 +155,10 @@ public class TagScan : MonoBehaviour
 		}
 
 		if(this.MAXFOLDER!=0)
-			this.progression = this.currentFolderCount / this.MAXFOLDER ;
+			this.progression = this.currentFolderCount / (float) this.MAXFOLDER ;
 		GUI.Button( new Rect(0f,32f*2,Screen.width*this.progression, 32f), "Progress" );
 
+		//UnityEngine.Debug.Log (this.currentFolderCount+" / "+this.MAXFOLDER);
 	}
 
 
@@ -150,7 +177,10 @@ public class TagScan : MonoBehaviour
 		float SumAngle=0.0f;
 		foreach(TaggedFolder currentChildFolder in  _RootFolder.Folders)
 		{
+
 			float ratio = currentChildFolder.TotalSize /  (float)total;
+			//if(total==0)
+			//	ratio=0f;
 			SumAngle += ratio*360.0f;
 			GameObject currentPie = createSlicedPie( currentChildFolder.FolderName , ratio*360.0f );
 			//currentPie.transform.Rotate(  SumAngle, 0.0f,0.0f);
@@ -167,6 +197,85 @@ public class TagScan : MonoBehaviour
 
 
 	}
+
+	IEnumerator scanFolderIteratively(  )
+	//void scanFolderIteratively()
+	{
+
+		UnityEngine.Debug.Log ("scanFolderIteratively Found "+this.Data.Count);
+
+		for (int i = 0; i < this.FOLDERS.Length; i++) 
+		{
+			string currentFolderPath = this.FOLDERS[i];
+			 
+			this.currentFolderCount ++;
+			
+			TaggedFolder newFolder = new TaggedFolder(currentFolderPath);
+			this.Data.Add ( newFolder );
+
+			//_ParentFolder.Folders.Add(newFolder);
+
+
+			FolderDict[currentFolderPath] = newFolder;
+
+			string parentPath = System.IO.Directory.GetParent( currentFolderPath ).FullName;
+			if(FolderDict.ContainsKey(parentPath))
+			{
+				TaggedFolder parentFolder = FolderDict[parentPath];
+				parentFolder.Folders.Add( newFolder );
+				newFolder.Parent = parentFolder;
+			}
+			else
+			{
+				UnityEngine.Debug.LogWarning(parentPath+" is not in FolderDict");
+			}
+
+
+			if( newFolder.Depth > this.MaxDepth )
+				this.MaxDepth = newFolder.Depth;
+			if(! this.DepthDict.ContainsKey( newFolder.Depth ) )
+				this.DepthDict[ newFolder.Depth ] = new List<TaggedFolder>();
+			this.DepthDict[ newFolder.Depth ].Add( newFolder );
+
+
+
+
+			
+			string[] files = new string[]{};
+			try
+			{
+				files = System.IO.Directory.GetFiles(currentFolderPath); 
+			}
+			catch (System.Exception e)
+			{
+				UnityEngine.Debug.LogWarning("Exception caught ="+e.Message );
+				//return;
+			}
+			//Fail on DirectoryNotFoundException: 
+			
+			foreach (string currentFilePath in files)
+			{
+				FileInfo newFile = new FileInfo(currentFilePath);
+				
+				//this.Data.Add( newFile ) ;
+				if(!Statistic_Extension.ContainsKey(newFile.Extension))
+					Statistic_Extension[ newFile.Extension ] = 0;
+				Statistic_Extension[ newFile.Extension ] += newFile.Length ;
+				
+				TaggedFile currentFile = new TaggedFile(currentFilePath, newFile.Extension, newFile.Length, newFolder);
+				newFolder.Files.Add(currentFile);
+				this.DataFiles.Add(currentFile);
+				
+			}
+
+
+			yield return null; 
+		}
+		UnityEngine.Debug.Log ("SCAN FINISHED Found "+this.Data.Count+" #files");
+		analyseScanned();
+		updateFolderCharts( this.CurrentFolder );
+	}
+
 
 	IEnumerator scanFolderRecursively( string _Path, TaggedFolder _ParentFolder )
 	//TaggedFolder scanFolderRecursively( string _Path )
@@ -294,6 +403,9 @@ public class TagScan : MonoBehaviour
 
 	GameObject createSlicedPie(string _ObjectName, float _Angle)
 	{
+		//TODO: Add asserts on Angle values
+		//UnityEngine.Debug.Log (_Angle);
+
 		GameObject result = new GameObject(_ObjectName);
 		MeshFilter meshFilter = (MeshFilter) result.AddComponent(typeof(MeshFilter));
 		meshFilter.mesh = CreateSliceMesh(_Angle);

@@ -50,7 +50,7 @@ public class PieInteractionScript : MonoBehaviour
 	}
 
 
-
+	/*
 	//void Update () 
 	void OnMouseUp()
 	{
@@ -61,10 +61,54 @@ public class PieInteractionScript : MonoBehaviour
 			Debug.Log ( this.currentToolTipText );
 
 
-			TagScan comp = Camera.main.GetComponent<TagScan>() as TagScan;
+			//TagScan comp = Camera.main.GetComponent<TagScan>() as TagScan;
+			TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
+
+			Debug.Log ( comp.name );
+
 			comp.updateFolderCharts(this.Folder);
 		}
 		
+	}
+	*/
+
+	void OnMouseOver () 
+	{
+		if(Input.GetMouseButtonDown(0))
+		{
+			if( this.currentToolTipText!="" )
+			{
+				//Event.current.GetTypeForControl(
+				Debug.Log ( this.currentToolTipText );
+				
+				
+				//TagScan comp = Camera.main.GetComponent<TagScan>() as TagScan;
+				TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
+				
+				Debug.Log ( comp.name );
+				
+				comp.updateFolderCharts(this.Folder);
+			}
+
+
+		}
+
+
+			//Debug.Log("Left click on this object");
+		if(Input.GetMouseButtonDown(1))
+		{
+			if( this.currentToolTipText!="" )
+			{
+				Debug.Log("Left click on this object");
+				TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
+				Debug.Log(this.Folder.Parent.FolderName);
+				comp.updateFolderCharts(this.Folder.Parent);
+			}
+		}
+
+			//Debug.Log("Right click on this object");
+		//if(Input.GetMouseButtonDown(2))
+			//Debug.Log("Middle click on this object");
 	}
 
 

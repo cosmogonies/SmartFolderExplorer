@@ -1,10 +1,11 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TagScan.cs">
     <Files>
-      <File FileName="Assets\TagScan.cs" Line="264" Column="5" />
-      <File FileName="Assets\SmartFolder.cs" Line="51" Column="44" />
-      <File FileName="Assets\PieInteractionScript.cs" Line="104" Column="44" />
+      <File FileName="Assets\TagScan.cs" Line="231" Column="5" />
+      <File FileName="Assets\SmartFolder.cs" Line="51" Column="36" />
+      <File FileName="Assets\PieInteractionScript.cs" Line="122" Column="47" />
+      <File FileName="Assets\GUI_LeftSidePanel.cs" Line="62" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

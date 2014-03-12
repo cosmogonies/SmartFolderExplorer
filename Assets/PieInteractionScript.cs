@@ -81,13 +81,25 @@ public class PieInteractionScript : MonoBehaviour
 				//Event.current.GetTypeForControl(
 				Debug.Log ( this.currentToolTipText );
 				
-				
-				//TagScan comp = Camera.main.GetComponent<TagScan>() as TagScan;
-				TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
-				
-				Debug.Log ( comp.name );
-				
-				comp.updateFolderCharts(this.Folder);
+
+
+				if(this.Folder.Folders.Count==0)
+				{
+					Debug.LogWarning ( "No SubFolders for current Hovered Folder, Aborting" );
+
+				}
+				else
+				{
+
+					//TagScan comp = Camera.main.GetComponent<TagScan>() as TagScan;
+					TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
+					
+					Debug.Log ( comp.name );
+					
+					comp.updateFolderCharts(this.Folder);
+
+				}
+
 			}
 
 
@@ -99,10 +111,19 @@ public class PieInteractionScript : MonoBehaviour
 		{
 			if( this.currentToolTipText!="" )
 			{
-				Debug.Log("Left click on this object");
-				TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
-				Debug.Log(this.Folder.Parent.FolderName);
-				comp.updateFolderCharts(this.Folder.Parent);
+
+				if(this.Folder.Parent == null )
+				{
+					Debug.LogWarning ( "We are already in ROOT, Aborting" );
+				}
+				else
+				{
+
+					//Debug.Log("Left click on this object");
+					TagScan comp = GameObject.FindGameObjectWithTag("Core").GetComponent<TagScan>() as TagScan;
+					Debug.Log("Returning to folder = "+this.Folder.Parent.Parent.FolderName);
+					comp.updateFolderCharts(this.Folder.Parent.Parent);
+				}
 			}
 		}
 

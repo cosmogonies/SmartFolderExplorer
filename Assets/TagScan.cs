@@ -33,11 +33,15 @@ public class TagScan : MonoBehaviour
 	public float progression =0.0f;
 	int MAXFOLDER=0;
 	private int currentFolderCount=0;
+
 	private string[] FOLDERS;
+	private List<FileInfo> FOLDERS2;
+
 	Dictionary<string, TaggedFolder> FolderDict ;
 	
 	void Start ()
 	{
+		UnityEngine.Debug.Log("Test");
 		DepthDict = new Dictionary<int, List<TaggedFolder>>();
 		FolderDict = new Dictionary<string, TaggedFolder>();
 	}
@@ -47,12 +51,38 @@ public class TagScan : MonoBehaviour
 
 		//UnityEngine.Debug.Log ("Found "+this.Data.Count+" #files");
 	}
-	
+
+
+
+
+
+	public System.IO.FileInfo[] scanFolderRecursively(string Location)
+	{
+
+		System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(Location); 
+		foreach (System.IO.FileInfo f in dir.GetFiles("*.*")) 
+		{
+			FOLDERS2.Add(f);
+		}
+
+		foreach (System.IO.DirectoryInfo d in dir.GetDirectories()) 
+		{
+			scanFolderRecursively(d);
+		}
+
+	}
+
+
+
+
+
+
+
+
+
 	public void scanFolder()
 	//public IEnumerator scanFolder()
 	{
-
-		//rootFolderPath = @"D:\I_DRIVE\cPaulhiac\MAYA";
 		string[] tokenized = rootFolderPath.Split( '\\');
 		this.MinDepth = tokenized.Length;
 		UnityEngine.Debug.Log ("Start depth found are "+this.MinDepth);
@@ -62,7 +92,11 @@ public class TagScan : MonoBehaviour
 	
 
 		Stopwatch currentWatch2 = System.Diagnostics.Stopwatch.StartNew();
+
 		this.FOLDERS = System.IO.Directory.GetDirectories(rootFolderPath, "*", System.IO.SearchOption.AllDirectories);
+
+
+
 		this.MAXFOLDER = this.FOLDERS.Length; 
 		//this.MAXFOLDER = System.IO.Directory.GetDirectories(rootFolderPath, "*", System.IO.SearchOption.AllDirectories).Length;
 		currentWatch2.Stop();
@@ -113,6 +147,20 @@ public class TagScan : MonoBehaviour
 		//updateFolderCharts( this.CurrentFolder );
 
 	}
+
+	bool isADriveLetter(string _Path)
+	{
+		if( (_Path.Length==2)||(_Path.Length==3)  )
+		{
+			//_Path[1]==':'
+			return true;
+		}
+
+		return false;
+	}
+
+
+
 
 	void analyseScanned()
 	{

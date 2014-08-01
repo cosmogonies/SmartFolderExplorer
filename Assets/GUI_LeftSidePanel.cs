@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
 
 /*
@@ -27,43 +29,33 @@ public class eDisplayMode
 
 public class GUI_LeftSidePanel : MonoBehaviour 
 {
-
 	public eDisplayMode DisplayMode = eDisplayMode.ShowFolders;
-
-	public float DoNotDisplayPieUnderAngle = 5f;
-
+	//public float DoNotDisplayPieUnderAngle = 5f;
+	protected float DoNotDisplayPieUnderAngle = 5f;
 
 	void Start ()
 	{
-	}
 
-	void Update () 
-	{	
-	}
 
+	}
+	void Update (){}
 
 	void OnGUI()
 	{
+		float HEIGHT_START = Screen.height * 0.33f;
 
 		float WIDTH = Screen.width * 0.33f;
-
-
-
-		GUI.Label( new Rect(0f,0f,WIDTH, 32f), "* DISPLAY *" );
-		
-
-		this.DoNotDisplayPieUnderAngle = GUI.HorizontalSlider( new Rect(0f,32f,WIDTH, 32f), this.DoNotDisplayPieUnderAngle, 0f,360f);
-
-
-		if( GUI.Button( new Rect(0f,64f,WIDTH, 32f), this.DisplayMode.Value ) )
+		GUI.Label( new Rect(0f,HEIGHT_START,WIDTH, 32f), "* DISPLAY *" );
+		this.DoNotDisplayPieUnderAngle = GUI.HorizontalSlider( new Rect(0f,HEIGHT_START+32f,WIDTH, 32f), this.DoNotDisplayPieUnderAngle, 0f,360f);
+		if( GUI.Button( new Rect(0f,HEIGHT_START+64f,WIDTH, 32f), this.DisplayMode.Value ) )
 		{
-
-
-
-
 		}
 
 
 
 	}
+
+
+
+
 }

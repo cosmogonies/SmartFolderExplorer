@@ -56,10 +56,11 @@ public class TagScan : MonoBehaviour
 
 
 
-	public System.IO.FileInfo[] scanFolderRecursively(string Location)
+	//public System.IO.FileInfo[] scanFolderRecursively(string Location)
+	public void scanFolderRecursively(System.IO.DirectoryInfo dir)
 	{
 
-		System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(Location); 
+		//System.IO.DirectoryInfo dir = new System.IO.DirectoryInfo(Location); 
 		foreach (System.IO.FileInfo f in dir.GetFiles("*.*")) 
 		{
 			FOLDERS2.Add(f);

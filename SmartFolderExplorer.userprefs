@@ -1,9 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace />
-  <MonoDevelop.Ide.Workbench ActiveDocument="E:\GoaT\GoaT\Assets\Scripts\Contraptions\DoorSystem.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\TagScan.cs">
     <Files>
-      <File FileName="E:\GoaT\GoaT\Assets\Scripts\Common\ItemTrigger.cs" Line="119" Column="4" />
-      <File FileName="E:\GoaT\GoaT\Assets\Scripts\Contraptions\DoorSystem.cs" Line="39" Column="89" />
+      <File FileName="Assets\TagScan.cs" Line="60" Column="13" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

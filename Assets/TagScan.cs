@@ -11,6 +11,8 @@ using System.Reflection;
 
 using SmartFolder;
 
+using TagLib;
+
 public class TagScan : MonoBehaviour
 {
 	//Dictionary<string, List<TaggedFile> > CloudData = new Dictionary<string, List<TaggedFile>> ();
@@ -196,19 +198,136 @@ public class TagScan : MonoBehaviour
 
 		this.rootFolderPath = GUI.TextField( new Rect(0f,0f,Screen.width, 32f), this.rootFolderPath );
 
-
+		/*
 		if ( GUI.Button( new Rect(0f,32f,Screen.width, 32f), "-* SCAN *-" ) )
 		{
 
 			this.scanFolder();
 		}
+		*/
 
 		if(this.MAXFOLDER!=0)
 			this.progression = this.currentFolderCount / (float) this.MAXFOLDER ;
 		GUI.Button( new Rect(0f,32f*2,Screen.width*this.progression, 32f), "Progress" );
 
 		//UnityEngine.Debug.Log (this.currentFolderCount+" / "+this.MAXFOLDER);
+
+
+		if ( GUI.Button( new Rect(200f,32f,Screen.width, 32f), "-* TEST *-" ) )
+		{
+			
+			string path = @"D:\PhotoTest.jpg";
+			//UnityEngine.Debug.Log(path);
+			//UnityEngine.Debug.Log(File.Exists(path));
+
+			//StartCoroutine(GetImage("https://lh3.googleusercontent.com/-1c82FJozx0s/U67jGIfUKXI/AAAAAAAAFyM/sdYWzujT9GA/s0-U-I/IMG_1939.JPG"));
+			//StartCoroutine(GetImage("file:///d://PhotoTest.jpg"));
+
+			//TagLib.Image.File
+
+
+			TagLib.File file = null;
+			
+			try 
+			{
+				file = TagLib.File.Create(path);
+			} 
+			catch (TagLib.UnsupportedFormatException) 
+			{
+				UnityEngine.Debug.Log ("UNSUPPORTED FILE: " + path);
+				UnityEngine.Debug.Log ("---------------------------------------");
+				return;
+			}
+			
+			var image = file as TagLib.Image.File;
+			if (file == null) {
+				UnityEngine.Debug.Log ("NOT AN IMAGE FILE: " + path);
+				UnityEngine.Debug.Log ("---------------------------------------");
+				return;
+			}
+			
+			UnityEngine.Debug.Log (path);
+
+			UnityEngine.Debug.Log("Tags in object  : " +  image.TagTypes);
+
+			UnityEngine.Debug.Log("Comment         : " +  image.ImageTag.Comment);
+			UnityEngine.Debug.Log("Keywords        : ");
+			foreach (var keyword in image.ImageTag.Keywords) {
+				UnityEngine.Debug.Log (keyword + " ");
+			}
+
+			UnityEngine.Debug.Log("Rating          : " +  image.ImageTag.Rating);
+			UnityEngine.Debug.Log("DateTime        : " +  image.ImageTag.DateTime);
+			UnityEngine.Debug.Log("Orientation     : " +  image.ImageTag.Orientation);
+			UnityEngine.Debug.Log("Software        : " +  image.ImageTag.Software);
+			UnityEngine.Debug.Log("ExposureTime    : " +  image.ImageTag.ExposureTime);
+			UnityEngine.Debug.Log("FNumber         : " +  image.ImageTag.FNumber);
+			UnityEngine.Debug.Log("ISOSpeedRatings : " +  image.ImageTag.ISOSpeedRatings);
+			UnityEngine.Debug.Log("FocalLength     : " +  image.ImageTag.FocalLength);
+			UnityEngine.Debug.Log("FocalLength35mm : " +  image.ImageTag.FocalLengthIn35mmFilm);
+			UnityEngine.Debug.Log("Make            : " +  image.ImageTag.Make);
+			UnityEngine.Debug.Log("Model           : " +  image.ImageTag.Model);
+			
+			if (image.Properties != null) {
+				UnityEngine.Debug.Log("Width           : " +  image.Properties.PhotoWidth);
+				UnityEngine.Debug.Log("Height          : " +  image.Properties.PhotoHeight);
+				UnityEngine.Debug.Log("Type            : " +  image.Properties.Description);
+			}
+			
+			UnityEngine.Debug.Log("Writable?       : " +  image.Writeable.ToString ());
+			UnityEngine.Debug.Log("Corrupt?        : " +  image.PossiblyCorrupt.ToString ());
+			
+			if (image.PossiblyCorrupt) {
+				foreach (string reason in image.CorruptionReasons) {
+					UnityEngine.Debug.Log ("    * " + reason);
+				}
+			}
+			
+			UnityEngine.Debug.Log ("---------------------------------------");
+
+			//image.ImageTag.Rating.Value = 1;
+			//image.ImageTag.RemoveTag( image.ImageTag as TagLib.Image.ImageTag );
+
+			//UnityEngine.Debug.Log("Corrupt Reasons        : " +  image.CorruptionReasons );
+
+			image.ImageTag.Model = "Bob";
+
+			image.Save();
+
+			//image.ImageTag.Model.Replace
+		}
+
+
+
+
 	}
+
+	//Extracted from TestExif.cs
+	//void GetImage(string url) 
+	IEnumerator GetImage(string url)
+	{
+		WWW www = new WWW(url);
+		UnityEngine.Debug.Log("Fetching image " + url);
+
+		yield return www;
+		if (!System.String.IsNullOrEmpty(www.error)) 
+		{
+			UnityEngine.Debug.Log(www.error);
+
+		} else {
+			UnityEngine.Debug.Log("Finished Getting Image -> SIZE: " + www.bytes.Length.ToString());
+			ExifLib.JpegInfo jpi = ExifLib.ExifReader.ReadJpeg(www.bytes, "Foo");
+			UnityEngine.Debug.Log("EXIF: " + jpi.Orientation.ToString());
+			UnityEngine.Debug.Log("EXIF: " + jpi.Model);
+
+			UnityEngine.Debug.Log("EXIF: " + jpi.UserComment);
+
+
+		}
+
+	}
+
+
 
 
 	public void updateFolderCharts(TaggedFolder _RootFolder)
@@ -238,8 +357,8 @@ public class TagScan : MonoBehaviour
 			currentPie.transform.position = Vector3.zero;
 			currentPie.transform.parent = ROOT.transform;
 			UnityEngine.Debug.Log (currentChildFolder.FolderName+" "+ (ratio*360.0f).ToString());
-			
-			PieInteractionScript comp = currentPie.AddComponent<PieInteractionScript>() as PieInteractionScript;
+
+            BHV_PieInteraction comp = currentPie.AddComponent<BHV_PieInteraction>() as BHV_PieInteraction;
 			comp.toolTipText = currentChildFolder.FolderName+ " "+Mathf.RoundToInt(ratio*100.0f) +"%" ;
 			comp.Folder = currentChildFolder;
 		}

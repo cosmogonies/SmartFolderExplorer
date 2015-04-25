@@ -5,13 +5,6 @@ using System.Collections.Generic;
 namespace SmartFolder
 {
 
-
-	/*
-public class TaggedItem
-{
-
-}
-*/
 	
 	public class TaggedFile
 	{

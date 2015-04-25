@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using System.IO;
 using UnityEngine.UI;
 
 
@@ -43,13 +43,20 @@ public class GUI_Kernel : MonoBehaviour
 		CLS_FolderTool gugu = new CLS_FolderTool();
 		List<string> result = gugu.scanDirectory(address);
 
+        GUI_List comp = ListPanel.GetComponent<GUI_List>() as GUI_List;
 
         foreach( string currentFile in result )
         {
 
-            GUI_List comp = ListPanel.GetComponent<GUI_List>() as GUI_List;
+            System.IO.FileInfo currentFileInfo = new FileInfo(currentFile);
 
-            comp.AddLine( "bob", @"C:\caca\lolo", ".txt", new string[]{"home","nemo","toto"} );
+            Dictionary<string, string> input = new Dictionary<string, string>();
+            input["File Name"] = currentFileInfo.Name;
+            input["Ext"] = currentFileInfo.Extension;
+            input["File Path"] = currentFileInfo.DirectoryName;
+            input["Tags"] = System.String.Join(".", gugu.findTagInFilePath(currentFile));
+
+            comp.AddLine(input);
         }
 
 

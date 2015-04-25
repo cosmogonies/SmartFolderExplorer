@@ -114,8 +114,63 @@ public class CLS_FolderTool
 
 
 
+    string[] findTagInFile(System.IO.FileInfo _File)
+    {
+        List<string> tags = new List<string>();
 
-	
+
+
+
+
+
+        return tags.ToArray();
+    }
+
+    public string[] findTagInFilePath(string _FilePath)
+    {
+        List<string> tags = new List<string>();
+
+        List<char> Separators = new List<char>();
+        Separators.Add(':');
+        Separators.Add('\\');     
+        Separators.Add('/');
+        Separators.Add('.');
+        Separators.Add(' ');
+        Separators.Add('_');
+        Separators.Add('-');
+
+        List<char> currentTag = new List<char>();
+
+        Debug.Log("From =" + _FilePath);
+
+        for (int i = 0; i < _FilePath.Length; i++)
+        {
+            char currentCharacter = _FilePath[i];
+
+            if (Separators.Contains(currentCharacter))
+            {
+                //Splitting!
+                if(currentTag.Count>0)
+                {
+                    tags.Add( new string(currentTag.ToArray()) );
+
+                    currentTag.Clear();
+
+                }
+
+            }
+            else 
+            {
+                currentTag.Add(currentCharacter);
+            }
+
+
+        }
+        
+        Debug.Log("Found =" + System.String.Join(".", tags.ToArray()) );
+
+        return tags.ToArray();
+    }
 	
 	
 }

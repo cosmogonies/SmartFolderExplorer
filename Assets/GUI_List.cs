@@ -6,7 +6,11 @@ using System.Collections.Generic;
 public class GUI_List : MonoBehaviour 
 {
 
-    private const int MAXLINE = 20;
+    private const int MAXLINE = 22;
+
+    private const float LINE_HEIGHT = 25;
+
+    private const float LINE_TOP_POSITION = 540f; //TODO: Remove it and make it dynamic
 
 
     public GameObject panelHeader;
@@ -15,12 +19,20 @@ public class GUI_List : MonoBehaviour
 
     private List<GameObject> LinePanels;
 
-   //private Dictionary<int, string> FromColumnOrderToPropertyName;
+    //private Dictionary<int, string> FromColumnOrderToPropertyName;
+    private string[] PropertyNameArray;
 
 	
 	void Start () 
     {
         this.LinePanels = new List<GameObject>();
+
+        PropertyNameArray = new string[4];
+        PropertyNameArray[0] = "File Name";
+        PropertyNameArray[1] = "Ext";
+        PropertyNameArray[2] = "File Path";
+        PropertyNameArray[3] = "Tags";
+
 	}
 	
 	void Update () 
@@ -28,32 +40,35 @@ public class GUI_List : MonoBehaviour
 	
 	}
 
-    /*
-    private void AnalyseHeader()
+
+    //public void AddLine(string _FileName, string _FilePath, string _FileExtension, string[] _FileTags)
+    public void AddLine(Dictionary<string, string> _InputDict)
     {
-        //foreach (Transform child in this.panelHeader.transform)
-        for (int i = 0; i < this.panelHeader.transform.GetChildCount(); i++)
+        //Input verification:
+        // all PropertyName must be recognized:
+        string[] currentItemValues = new string[_InputDict.Count];
+        foreach (string PropertyName in _InputDict.Keys)
         {
-            FromColumnOrderToPropertyName[i] = this.panelHeader.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text;       
+            bool PropertyFound = false;
+            for (int i = 0; i < PropertyNameArray.Length; i++)
+			{
+                if (PropertyNameArray[i] == PropertyName)
+                {
+                    currentItemValues[i] = _InputDict[PropertyName];
+                    PropertyFound = true;
+                }
+			}
+            if (! PropertyFound)
+                Debug.LogWarning("Property named " + PropertyName+" is not found.");
         }
-       
-    }
-     */
 
 
 
-    public void AddLine(string _FileName, string _FilePath, string _FileExtension, string[] _FileTags)
-    {
         // We create the linePanel
         GameObject newPanel = GameObject.Instantiate(panelHeader);
 
-        // Pruning off screen lines
-        if (this.LinePanels.Count > 50)
-            newPanel.SetActive(false);
-
         newPanel.name = "Panel_Line_" + this.LinePanels.Count.ToString();
 
-        // We place it to the right place :
 
         // We search the previous one:
         RectTransform newLinePanelTransform = newPanel.GetComponent<RectTransform>() as RectTransform;
@@ -79,51 +94,82 @@ public class GUI_List : MonoBehaviour
         newLinePanelTransform.offsetMin = aboveLinePanelTransform.offsetMin;
         newLinePanelTransform.offsetMax = aboveLinePanelTransform.offsetMax;
 
-        //Offsetting by 50 in vertical:
-        newLinePanelTransform.offsetMin = new Vector2(newLinePanelTransform.offsetMin.x, newLinePanelTransform.offsetMin.y - 25f);
-        newLinePanelTransform.offsetMax = new Vector2(newLinePanelTransform.offsetMax.x, newLinePanelTransform.offsetMax.y - 25f);
+        //Offsetting by LINE_HEIGHT in vertical, from the previous (abonve) one:
+        newLinePanelTransform.offsetMin = new Vector2(newLinePanelTransform.offsetMin.x, newLinePanelTransform.offsetMin.y - LINE_HEIGHT);
+        newLinePanelTransform.offsetMax = new Vector2(newLinePanelTransform.offsetMax.x, newLinePanelTransform.offsetMax.y - LINE_HEIGHT);
 
-
-
-
+        //Fill the columns:
         for (int i = 0; i < newLinePanelTransform.transform.childCount; i++)
         {
-            //FromColumnOrderToPropertyName[i] = this.panelHeader.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text;
             string PropertyName = newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text;
-
-            switch (PropertyName)
-            {
-                case "File Name":
-                    newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text = _FileName;
-                    break;
-                case "Ext":
-                    newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text = _FileExtension;
-                    break;
-                case "Path":
-                    newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text = _FilePath;
-                    break;
-                case "Tags":
-                    newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text =  string.Join(",", _FileTags); 
-                    break;
-
-                default:
-                    newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text = "NOT FOUND";
-                    break;
-
-            }
-            
-                
-
-
+            newLinePanelTransform.transform.GetChild(i).GetComponent<UnityEngine.UI.Text>().text = currentItemValues[i];
         }
 
+        // Refresh visibilty (desactivate if off-screen)
+        refreshVisibility(newLinePanelTransform);
 
         LinePanels.Add(newPanel);
+    }
 
+    
+    private void offsetLines(float _ScrollBarValue)
+    {
+        // 0 : item[0] on top, item[n] on bottom  (where item[n].y <0 )
+        // 1 : item[last] on bottom, item[m] on top (where item[m-1].y > Header.y ) 
+
+        for (int i = 0; i < this.LinePanels.Count; i++)
+        {
+            GameObject currentLinePanel = this.LinePanels[i];
+
+            RectTransform newLinePanelTransform = currentLinePanel.GetComponent<RectTransform>() as RectTransform;
+
+            // Base position (at _ScrollBarValue ==0), item[0] on top:
+            float newPositionYMinAbsolute = LINE_TOP_POSITION -  (i*LINE_HEIGHT);
+            float newPositionYMaxRelative = -LINE_HEIGHT * (i + 1);
+
+            // Applying _ScrollBarValue offset:
+            newPositionYMinAbsolute += _ScrollBarValue * LINE_HEIGHT * (this.LinePanels.Count - MAXLINE);
+            newPositionYMaxRelative += _ScrollBarValue * LINE_HEIGHT * (this.LinePanels.Count - MAXLINE);
+
+            newLinePanelTransform.offsetMin = new Vector2(newLinePanelTransform.offsetMin.x, newPositionYMinAbsolute);
+            newLinePanelTransform.offsetMax = new Vector2(newLinePanelTransform.offsetMax.x, newPositionYMaxRelative);
+
+            refreshVisibility(newLinePanelTransform);
+
+            //FYI
+            // _ScrollBarValue ==0
+            //Panel_Line_0 (0.0, 539.5) => (-30.0, -25.5)
+            //Panel_Line_1 (0.0, 514.5) => (-30.0, -50.5)
+            //Panel_Line_2 (0.0, 489.5) => (-30.0, -75.5) : (, 540 - i*25)=> (, -25*i)
+        }
 
     }
-    
-    
 
+
+    void refreshVisibility(RectTransform _ItemPosition)
+    {
+        bool isActivated = _ItemPosition.gameObject.activeSelf;
+
+        if ((_ItemPosition.position.y < LINE_HEIGHT) || (_ItemPosition.position.y > LINE_TOP_POSITION))
+        {
+            if (isActivated)
+            {
+                _ItemPosition.gameObject.SetActive(false);
+            }
+        }       
+        else
+	    {
+            if(! isActivated)
+                _ItemPosition.gameObject.SetActive(true);
+	    }
+    }
+
+
+    public void scrollBarCallback()
+    {
+        UnityEngine.UI.Scrollbar scrollBarComp = scrollbar.GetComponent<UnityEngine.UI.Scrollbar>();
+        //Debug.Log("Value changed to =" + scrollBarComp.value);
+        offsetLines(scrollBarComp.value);
+    }
 
 }

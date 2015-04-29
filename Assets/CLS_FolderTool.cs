@@ -141,7 +141,7 @@ public class CLS_FolderTool
 
         List<char> currentTag = new List<char>();
 
-        Debug.Log("From =" + _FilePath);
+        //Debug.Log("From =" + _FilePath);
 
         for (int i = 0; i < _FilePath.Length; i++)
         {
@@ -152,7 +152,34 @@ public class CLS_FolderTool
                 //Splitting!
                 if(currentTag.Count>0)
                 {
-                    tags.Add( new string(currentTag.ToArray()) );
+                    string newTag = new string(currentTag.ToArray());
+                    newTag = newTag.ToLower();
+
+                    //Removing blacklisted tags.
+                    if ((newTag == "img") || (newTag == "vid") || (newTag == "dsc"))
+                    {
+                        currentTag.Clear();
+                        continue;   
+                    }
+                     
+                    
+                    if (checkIfTagIsADate(newTag))
+                    {
+                        /*
+                        if (!tags.Contains(newTag.Substring(0, 4)))
+                            tags.Add(newTag.Substring(0,4)); //adding year
+                        if (!tags.Contains(newTag.Substring(4, 2)))
+                            tags.Add(newTag.Substring(4,2)); //adding month
+                        if (!tags.Contains(newTag.Substring(6, 2)))
+                            tags.Add(newTag.Substring(6,2)); //adding day
+                        */
+                      
+                    }
+                    else
+                    {
+                        if (!tags.Contains(newTag))
+                            tags.Add(newTag);
+                    }
 
                     currentTag.Clear();
 
@@ -163,14 +190,53 @@ public class CLS_FolderTool
             {
                 currentTag.Add(currentCharacter);
             }
-
-
         }
-        
-        Debug.Log("Found =" + System.String.Join(".", tags.ToArray()) );
+
+        //updateModificationDate(_FilePath, tags.ToArray() );
+
+
+        //Debug.Log("Found =" + System.String.Join(".", tags.ToArray()) );
 
         return tags.ToArray();
     }
-	
-	
+
+
+    bool checkIfTagIsADate(string _currentTag)
+    {
+        //format: 20150416
+        if (_currentTag.Length==8)
+        {
+            if (_currentTag.StartsWith("20") || _currentTag.StartsWith("19"))   //only last century is supported (previously photographs were NOT invented, nor exif)
+            {
+
+                if ((_currentTag[4] == '0') || (_currentTag[4] == '1')) //only tweleve months
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void updateModificationDate(string _FilePath, string[] _Tags)
+    {
+        //System.IO.FileInfo theFile = new FileInfo(_FilePath);
+
+        System.DateTime theTime;
+
+        theTime = new System.DateTime(1981, 10, 28);
+
+        System.IO.File.SetLastWriteTime(_FilePath, theTime);
+
+        //File.SetLastWriteTime(path, DateTime.Now);
+        
+    }
+
+    //string[] tagifyDate(string _thedateAsString)
+    //{
+    
+
+    //}
+
 }
